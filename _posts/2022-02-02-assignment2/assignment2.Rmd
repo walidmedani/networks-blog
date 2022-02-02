@@ -88,8 +88,8 @@ sum(igraph::triad_census(wardata))
 
 dyaddata <- data.frame(Mut = 1374, Asym = 0, Null = 10716)
 triaddata <- data.frame(Triad0 = 449446, Triad1 = 144438, Triad2 = 13050, Triad3 = 13686, Triadsum = 620620)
-tibble(dyaddata)
-tibble(triaddata)
+table(dyaddata)
+table(triaddata)
 ```
 
 

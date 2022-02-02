@@ -2133,14 +2133,16 @@ $null
 <pre><code> [1] 449446      0 144438      0      0      0      0      0      0
 [10]      0  13050      0      0      0      0  13686</code></pre>
 <pre><code>[1] 620620</code></pre>
-<pre><code># A tibble: 1 x 3
-    Mut  Asym  Null
-  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1  1374     0 10716</code></pre>
-<pre><code># A tibble: 1 x 5
-  Triad0 Triad1 Triad2 Triad3 Triadsum
-   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
-1 449446 144438  13050  13686   620620</code></pre>
+<pre><code>, , Null = 10716
+
+      Asym
+Mut    0
+  1374 1</code></pre>
+<pre><code>, , Triad2 = 13050, Triad3 = 13686, Triadsum = 620620
+
+        Triad1
+Triad0   144438
+  449446      1</code></pre>
 </div>
 <h1 id="transivity">Transivity</h1>
 <div class="layout-chunk" data-layout="l-body">
