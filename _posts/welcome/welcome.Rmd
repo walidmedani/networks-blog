@@ -4,9 +4,9 @@ description: |
   Week 1 & 2
 author:
   - name: Walid Medani 
-    url: https://example.com/norajones
+    url: https://walidmedani.github.io/networks-blog/
     affiliation: UMass Amherst
-    affiliation_url: https://example.com/spacelysprokets
+    affiliation_url: 
 date: 02-02-2022
 output:
   distill::distill_article:
@@ -21,5 +21,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-
+```{r}
+library(distill)
+create_post("Assignment_2")
+```
 
