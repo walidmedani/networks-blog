@@ -3,8 +3,8 @@ title: "Assignment_2"
 description: |
   A short description of the post.
 author:
-  - name: Nora Jones
-    url: https://example.com/norajones
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
 date: 2022-02-02
 output:
   distill::distill_article:
