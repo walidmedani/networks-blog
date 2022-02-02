@@ -23,15 +23,14 @@ Learn more about using Distill at <https://rstudio.github.io/distill>.
 ---
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-library(readr)
 library(igraph)
 library(statnet)
 library(tidyverse)
 ```
 
 ```{r}
-#Read in network data#
-net_data<-read.csv("MIDIP5.csv",header=T,stringsAsFactors=F)
+#Read in network data
+net_data<-read.csv("MIDIP5.CSV", header=T,stringsAsFactors=F)
 
 #This is an affiliation network, based on shared participation in conflicts#
 mid_net_2<-graph.edgelist(as.matrix(net_data[,c("dispnum","stabb")]),directed=F)
