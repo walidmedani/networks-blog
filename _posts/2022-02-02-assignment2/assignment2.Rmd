@@ -22,8 +22,8 @@ Learn more about using Distill at <https://rstudio.github.io/distill>.
 
 ---
 
-```{r}
-library(learnr)
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(readr)
 library(igraph)
 library(statnet)
 library(tidyverse)
