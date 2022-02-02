@@ -1,7 +1,7 @@
 ---
 title: "Assignment_2"
 description: |
-  A short description of the post.
+  Week 1 & 2.
 author:
   - name: Walid Medani
     url: https://walidmedani.github.io/networks-blog/
@@ -20,4 +20,97 @@ Distill is a publication format for scientific and technical writing, native to 
 
 Learn more about using Distill at <https://rstudio.github.io/distill>.
 
+---
 
+```{r}
+library(learnr)
+library(igraph)
+library(statnet)
+library(tidyverse)
+```
+
+```{r}
+#Read in network data#
+net_data<-read.csv("MIDIP5.csv",header=T,stringsAsFactors=F)
+
+#This is an affiliation network, based on shared participation in conflicts#
+mid_net_2<-graph.edgelist(as.matrix(net_data[,c("dispnum","stabb")]),directed=F)
+
+#An easy way to collapse this is through matrix multiplication#
+#First, get the full adjacency matrix#
+mid_mat<-as.matrix(get.adjacency(mid_net_2))
+dim(mid_mat) #Square matrix
+row.names(mid_mat)[1:10] #Mix of countries and conflicts
+colnames(mid_mat)[1:10] #Same in rows
+
+#Next, isolate rows to conflicts and columns to states#
+mid_mat<-mid_mat[which(row.names(mid_mat) %in% net_data$dispnum),
+                 which(colnames(mid_mat) %in% net_data$stabb)]
+dim(mid_mat) #Rectangular matrix - conflict x country
+row.names(mid_mat)[1:10] #Conflicts in rows
+colnames(mid_mat)[1:10] #Countries in columns
+
+#Finally, multiply by the transposition of the network#
+#This either gives us a 1-mode conflict network based on shared participants...#
+conflict_mat<-mid_mat %*% t(mid_mat)
+row.names(conflict_mat)[1:10] #Only conflicts
+colnames(conflict_mat)[1:10] #in columns too
+
+#... or the 1- mode state network, based on shared conflicts#
+state_mat<-t(mid_mat) %*% mid_mat
+row.names(state_mat)[1:10] #Only states
+colnames(state_mat)[1:10] #in columns too
+#Edges are number of conflicts in which any two countries both participated#
+```
+#Network Graph
+```{r}
+plot(wardata,vertex.label=NA,vertex.size=3)
+```
+
+#Network Size
+```{r}
+vcount(wardata)
+ecount(wardata)
+```
+#Attributes
+```{r}
+is_bipartite(wardata)
+is_directed(wardata)
+is_weighted(wardata)
+vertex_attr_names(wardata)
+edge_attr_names(wardata)
+```
+Network isn't bipartite nor directed however it is weighted.
+
+# Dyad & Triad Census
+```{r}
+igraph::dyad.census(wardata)
+igraph::triad_census(wardata)
+sum(igraph::triad_census(wardata))
+
+dyaddata <- data.frame(Mut = 1374, Asym = 0, Null = 10716)
+triaddata <- data.frame(Triad0 = 449446, Triad1 = 144438, Triad2 = 13050, Triad3 = 13686, Triadsum = 620620)
+tibble(dyaddata)
+tibble(triaddata)
+```
+
+
+#Transivity
+```{r}
+transitivity(wardata, type="global")
+transitivity(wardata, type="average")
+```
+Global transivity shows a proportion of .76 of completely connected triads within the network and the density of the ego network is .65.
+
+#Geodesic & Component structure
+```{r}
+average.path.length(wardata,directed=F)
+igraph::components(wardata)$no
+igraph::components(wardata)$csize
+```
+There are 4 components with the first comprising of 150 members and the next 3 components having only 2 members each.
+
+#Network density
+```{r}
+graph.density(wardata)
+```

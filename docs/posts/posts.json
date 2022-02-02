@@ -15,5 +15,22 @@
     "preview": {},
     "last_modified": "2022-02-02T04:02:52-05:00",
     "input_file": {}
+  },
+  {
+    "path": "posts/2022-02-02-assignment2/",
+    "title": "Assignment_2",
+    "description": "A short description of the post.",
+    "author": [
+      {
+        "name": "Walid Medani",
+        "url": "https://walidmedani.github.io/networks-blog/"
+      }
+    ],
+    "date": "2022-02-02",
+    "categories": [],
+    "contents": "\r\nDistill is a publication format for scientific and technical writing, native to the web.\r\nLearn more about using Distill at https://rstudio.github.io/distill.\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2022-02-02T04:17:38-05:00",
+    "input_file": "assignment2.knit.md"
   }
 ]
