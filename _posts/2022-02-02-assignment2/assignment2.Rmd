@@ -16,21 +16,19 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Distill is a publication format for scientific and technical writing, native to the web.
-
-Learn more about using Distill at <https://rstudio.github.io/distill>.
-
----
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+library(readr)
 library(igraph)
 library(statnet)
 library(tidyverse)
 ```
 
-```{r}
+```{r include=FALSE}
 #Read in network data
-net_data<-read.csv("MIDIP5.CSV", header=T,stringsAsFactors=F)
+urlfile<-'https://raw.githubusercontent.com/walidmedani/networks-blog/main/MIDIP5.csv'
+net_data<-read.csv(urlfile)
+
 
 #This is an affiliation network, based on shared participation in conflicts#
 mid_net_2<-graph.edgelist(as.matrix(net_data[,c("dispnum","stabb")]),directed=F)
@@ -60,18 +58,19 @@ state_mat<-t(mid_mat) %*% mid_mat
 row.names(state_mat)[1:10] #Only states
 colnames(state_mat)[1:10] #in columns too
 #Edges are number of conflicts in which any two countries both participated#
+wardata<-graph.adjacency(state_mat,mode="undirected",weighted=T,diag = F)
 ```
-#Network Graph
+# Network Graph
 ```{r}
 plot(wardata,vertex.label=NA,vertex.size=3)
 ```
 
-#Network Size
+# Network Size
 ```{r}
 vcount(wardata)
 ecount(wardata)
 ```
-#Attributes
+# Attributes
 ```{r}
 is_bipartite(wardata)
 is_directed(wardata)
@@ -94,14 +93,14 @@ tibble(triaddata)
 ```
 
 
-#Transivity
+# Transivity
 ```{r}
 transitivity(wardata, type="global")
 transitivity(wardata, type="average")
 ```
 Global transivity shows a proportion of .76 of completely connected triads within the network and the density of the ego network is .65.
 
-#Geodesic & Component structure
+# Geodesic & Component structure
 ```{r}
 average.path.length(wardata,directed=F)
 igraph::components(wardata)$no
@@ -109,7 +108,7 @@ igraph::components(wardata)$csize
 ```
 There are 4 components with the first comprising of 150 members and the next 3 components having only 2 members each.
 
-#Network density
+# Network density
 ```{r}
 graph.density(wardata)
 ```
