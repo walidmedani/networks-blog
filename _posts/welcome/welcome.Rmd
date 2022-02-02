@@ -4,9 +4,9 @@ description: |
   Welcome to our new blog, Walid Medani. We hope you enjoy 
   reading what we have to say!
 author:
-  - name: Nora Jones 
+  - name: Walid Medani 
     url: https://example.com/norajones
-    affiliation: Spacely Sprockets
+    affiliation: UMass Amherst
     affiliation_url: https://example.com/spacelysprokets
 date: 02-02-2022
 output:
