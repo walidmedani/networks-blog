@@ -73,8 +73,9 @@ centr_degree(wardata)
 ```{r}
 wardata.nodes<-data.frame(name=V(wardata)$name, degree=igraph::degree(wardata)) %>%
   arrange(desc(degree))
-wardata.nodes
+head(wardata.nodes)
 
+  
 summary(wardata.nodes)
 hist(wardata.nodes$degree, main="Militarized Interstate Disputes", xlab = "")
 ```
