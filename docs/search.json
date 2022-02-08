@@ -6,14 +6,14 @@
       "description": "Some additional details about the blog",
       "author": [],
       "contents": "\r\n\r\n\r\n\r\n",
-      "last_modified": "2022-02-08T11:27:44-05:00"
+      "last_modified": "2022-02-08T11:35:28-05:00"
     },
     {
       "path": "index.html",
       "title": "Walid Medani",
       "author": [],
       "contents": "\r\n\r\n\r\n\r\n",
-      "last_modified": "2022-02-08T11:27:44-05:00"
+      "last_modified": "2022-02-08T11:35:29-05:00"
     }
   ],
   "collections": ["posts/posts.json"]
