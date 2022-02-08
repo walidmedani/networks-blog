@@ -1,11 +1,11 @@
 ---
-title: "Assignment_2"
+title: "Assignment_3"
 description: |
-  Directed network of militarized interstate disputes from 1870 to 2014.     (https://correlatesofwar.org/data-sets/MIDs)
+  Degree and Centrality
 author:
   - name: Walid Medani
     url: https://walidmedani.github.io/networks-blog/
-date: 2022-02-02
+date: 2022-02-07
 output:
   distill::distill_article:
     self_contained: false
@@ -16,10 +16,8 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 library(igraph)
-library(statnet)
 library(tidyverse)
 ```
 
@@ -63,51 +61,24 @@ wardata<-graph.adjacency(state_mat,mode="undirected",weighted=T,diag = F)
 ```{r}
 plot(wardata,vertex.label=NA,vertex.size=3)
 ```
+# Description
+There are 156 nodes within the militarized interstate dispute dataset. Edges are undirected and are defined as instances of when one state threatened, displayed, or used force directed towards the government, official representatives, official forces, property, or territory of another state.
 
-# Network Size
-```{r}
-vcount(wardata)
-ecount(wardata)
-```
-# Attributes
-```{r}
-is_bipartite(wardata)
-is_directed(wardata)
-is_weighted(wardata)
-vertex_attr_names(wardata)
-edge_attr_names(wardata)
-```
-Network isn't bipartite nor directed however it is weighted.
-
-# Dyad & Triad Census
-```{r}
-igraph::dyad.census(wardata)
-igraph::triad_census(wardata)
-sum(igraph::triad_census(wardata))
-
-dyaddata <- data.frame(Mut = 1374, Asym = 0, Null = 10716)
-triaddata <- data.frame(Triad0 = 449446, Triad1 = 144438, Triad2 = 13050, Triad3 = 13686, Triadsum = 620620)
-tibble(dyaddata)
-tibble(triaddata)
-```
-
-
-# Transivity
-```{r}
-transitivity(wardata, type="global")
-transitivity(wardata, type="average")
-```
-Global transivity shows a proportion of .76 of completely connected triads within the network and the density of the ego network is .65.
-
-# Geodesic & Component structure
-```{r}
-average.path.length(wardata,directed=F)
-igraph::components(wardata)$no
-igraph::components(wardata)$csize
-```
-There are 4 components with the first comprising of 150 members and the next 3 components having only 2 members each.
-
-# Network density
+# Network Density & Centralization
 ```{r}
 graph.density(wardata)
+centr_degree(wardata)
 ```
+# Degrees
+```{r}
+wardata.nodes<-data.frame(name=V(wardata)$name, degree=igraph::degree(wardata)) %>%
+  arrange(desc(degree))
+wardata.nodes
+
+summary(wardata.nodes)
+hist(wardata.nodes$degree, main="Militarized Interstate Disputes", xlab = "")
+```
+
+# Results
+USA, UK, France, Russia, and Turkey are some of the most central nodes within the dataset. Whereas Tunisia, Kosovo, Jamaica, Sri Lanka, and Nepal are the lowest central nodes. The network density is low (.11) with not many actual connections despite the portion of potential connections. With a centralization score of .36, ties of the network aren't too concentrated on a group of actors.
+

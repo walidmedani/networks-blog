@@ -21,8 +21,11 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-```{r}
+```{r include=FALSE}
 library(distill)
 create_post("Assignment_2")
 ```
-
+```{r include=FALSE}
+library(distill)
+create_post("Assignment_3")
+```
