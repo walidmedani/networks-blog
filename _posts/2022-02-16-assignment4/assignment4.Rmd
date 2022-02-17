@@ -1,0 +1,116 @@
+---
+title: "Assignment_4"
+description: |
+  Status and Eigenvector (https://correlatesofwar.org/data-sets/MIDs)
+author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-02-16
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(igraph)
+library(tidyverse)
+```
+
+```{r include=FALSE}
+#Read in network data
+urlfile<-'https://raw.githubusercontent.com/walidmedani/networks-blog/main/MIDIP5.csv'
+net_data<-read.csv(urlfile)
+
+
+#This is an affiliation network, based on shared participation in conflicts#
+mid_net_2<-graph.edgelist(as.matrix(net_data[,c("dispnum","stabb")]),directed=F)
+
+#An easy way to collapse this is through matrix multiplication#
+#First, get the full adjacency matrix#
+mid_mat<-as.matrix(get.adjacency(mid_net_2))
+dim(mid_mat) #Square matrix
+row.names(mid_mat)[1:10] #Mix of countries and conflicts
+colnames(mid_mat)[1:10] #Same in rows
+
+#Next, isolate rows to conflicts and columns to states#
+mid_mat<-mid_mat[which(row.names(mid_mat) %in% net_data$dispnum),
+                 which(colnames(mid_mat) %in% net_data$stabb)]
+dim(mid_mat) #Rectangular matrix - conflict x country
+row.names(mid_mat)[1:10] #Conflicts in rows
+colnames(mid_mat)[1:10] #Countries in columns
+
+#Finally, multiply by the transposition of the network#
+#This either gives us a 1-mode conflict network based on shared participants...#
+conflict_mat<-mid_mat %*% t(mid_mat)
+row.names(conflict_mat)[1:10] #Only conflicts
+colnames(conflict_mat)[1:10] #in columns too
+
+#... or the 1- mode state network, based on shared conflicts#
+state_mat<-t(mid_mat) %*% mid_mat
+row.names(state_mat)[1:10] #Only states
+colnames(state_mat)[1:10] #in columns too
+#Edges are number of conflicts in which any two countries both participated#
+wardata<-graph.adjacency(state_mat,mode="undirected",weighted=T,diag = F)
+```
+# Network Graph
+```{r}
+plot(wardata,vertex.label=NA,vertex.size=3)
+```
+# Description
+There are 156 nodes within the militarized interstate dispute dataset. Edges are undirected and are defined as instances of when one state threatened, displayed, or used force directed towards the government, official representatives, official forces, property, or territory of another state.
+
+# Network Density & Degree Centralization
+```{r}
+graph.density(wardata)
+centr_degree(wardata)
+```
+
+```{r}
+wardata.nodes<-data.frame(name=V(wardata)$name, degree=igraph::degree(wardata)) %>%
+  arrange(desc(degree))
+head(wardata.nodes)
+
+  
+summary(wardata.nodes)
+hist(wardata.nodes$degree, main="Militarized Interstate Disputes", xlab = "")
+```
+
+# Centrality Measures
+
+### Closeness Centraility
+```{r}
+head(closeness(wardata))
+```
+### Betweenness Centrality
+```{r}
+head(betweenness(wardata))
+be=betweenness(wardata, normalized=T)
+plot(wardata, vertex.label="", vertex.color="gold", edge.color="slateblue", vertex.size=be*50, edge.width=E(wardata)$degree*100)
+```
+
+### Eigen Centrality
+```{r}
+wareigen<-centr_eigen(wardata,directed=F)
+head(wareigen$vector)
+
+wareigen$centralization
+```
+```{r}
+#war.nodes<-data.frame(name=V(wardata)$name,
+    #totdegree=igraph::degree(wardata, loops=FALSE),
+    #indegree=igraph::degree(wardata, mode="in", loops=FALSE),
+   # outdegree=igraph::degree(wardata, mode="out", loops=FALSE),
+   # eigen=igraph::centr_eigen(wardata))
+
+#war.nodes %>% 
+ # slice(1:5)
+```
+
+
