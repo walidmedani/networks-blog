@@ -83,3 +83,6 @@ hist(wardata.nodes$degree, main="Militarized Interstate Disputes", xlab = "")
 # Results
 USA, UK, France, Russia, and Turkey are some of the most central nodes within the dataset. Whereas Tunisia, Kosovo, Jamaica, Sri Lanka, and Nepal are the lowest central nodes. The network density is low (.11) with not many actual connections despite the portion of potential connections. With a centralization score of .36, ties of the network aren't too concentrated on a group of actors.
 
+
+
+
