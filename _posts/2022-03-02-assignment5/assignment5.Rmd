@@ -1,0 +1,99 @@
+---
+title: "Assignment_5"
+description: |
+  Structural Holes
+  author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-03-02
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(igraph)
+library(tidyverse)
+```
+
+```{r}
+urlfile<-'https://raw.githubusercontent.com/walidmedani/networks-blog/main/got_like_dislike.csv'
+gotdata<-read.csv(urlfile)
+gotlikes <- graph.data.frame(gotdata, directed=TRUE)
+```
+
+# Game of Thrones Like/Dislike
+```{r}
+plot.igraph(gotlikes, 
+            vertex.label.cex=1)
+```
+# Network Size
+```{r}
+vcount(gotlikes)
+ecount(gotlikes)
+```
+# Attributes
+```{r}
+is_bipartite(gotlikes)
+is_directed(gotlikes)
+is_weighted(gotlikes)
+vertex_attr_names(gotlikes)
+edge_attr_names(gotlikes)
+```
+
+
+
+
+# Centrality Measures
+
+### Betweenness Centrality
+
+```{r}
+igraph::betweenness(gotlikes, directed=TRUE)
+```
+### Edge Betweeness plot
+```{r}
+E(gotlikes)$width <- edge_betweenness(gotlikes)
+
+
+gotlikesgraph <- graph.data.frame(gotdata, directed= TRUE)
+
+plot.igraph(gotlikes,
+            edge.width = igraph::edge.betweenness(gotlikesgraph)+1,
+            edge.color = heat.colors(igraph::edge.betweenness(gotlikesgraph)+1), 
+            vertex.shape="sphere",
+            vertex.size=15,
+            vertex.label.font=2,
+            vertex.color="green")
+```
+### Betweeness Centralization
+```{r}
+centr_betw(gotlikes,directed=T)$centralization
+```
+
+### Closeness Centralization
+
+```{r warning=FALSE}
+centr_clo(gotlikes)$centralization
+```
+
+# Network Constraint
+```{r}
+head(constraint(gotlikes))
+```
+# Gould-Fernandez Brokerage
+```{r}
+library(intergraph)
+library(statnet)
+net <- asNetwork(gotlikes)
+got.nodes<-data.frame(name=V(gotlikes)$name, degree=igraph::degree(gotlikes))
+brokerage(net, cl = got.nodes$degree)$z.nli
+
+```
+
+
