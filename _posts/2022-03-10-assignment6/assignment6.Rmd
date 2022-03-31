@@ -1,0 +1,155 @@
+---
+title: "Assignment_6"
+description: |
+  Roles and Blockmodels (Marriages between characters in the Game of Thrones Novels)
+  author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+author: []
+date: 2022-03-10
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+```{r}
+#First let's do some set up
+  if("statnet"   %in% rownames(installed.packages()) == FALSE) {install.packages("statnet")}
+  if("igraph"   %in% rownames(installed.packages()) == FALSE) {install.packages("igraph")}
+  if("gsheet"   %in% rownames(installed.packages()) == FALSE) {install.packages("gsheet")}
+  
+
+  library(statnet)
+  library(igraph)
+  library(gsheet)
+  library(gdata)
+
+#First let's load the data
+  ##data in edgelist format
+  relationships<-gsheet2tbl("https://docs.google.com/spreadsheets/d/1THL4Q4NO4XdFtF2Lgk3lpGuPOffLIp2Nk6y3XgvHnGs/edit?usp=sharing")
+  relationships$To<-ifelse(relationships$To=="Unknown",ifelse(relationships$From=="Frey", "North", relationships$From),relationships$To)
+
+  ##also import family and color information to match
+  family<-gsheet2tbl("https://docs.google.com/spreadsheets/d/19w8dij4snBSREMpDoGzHXGC4K6Su0D8j2SY1rPYFSLQ/edit?usp=sharing")
+  
+##all marriages
+  marriages<-relationships%>%
+  filter(Type!="Affair")%>%
+  group_by(From,To)%>%
+  summarise(weight=n())
+
+#Lets create a igraph object
+      network_igraph<-graph_from_edgelist(as.matrix(marriages[,1:2]), directed=FALSE)
+      E(network_igraph)$weight<-marriages$weight
+      gotmarr.mat<-as.matrix(as_adj(network_igraph, attr="weight"))
+      
+      #igraph won't correct for strange edgelist with some asymmetry
+      #export to statnet to fix and then reimport
+      gotmarr.stat <- network(gotmarr.mat,ignore.eval=FALSE, names.eval="weight",directed = FALSE, loops=TRUE )
+      gotmarr.stat%v%"color"<-family$Color[match(gotmarr.stat%v%"name", family$Family)]
+      gotmarr.stat%v%"region"<-family$Region[match(gotmarr.stat%v%"name", family$Family)]
+      gotmarr.mat<-as.matrix.network(gotmarr.stat,attrname = "weight")
+      
+      #reimport to igraph
+      gotmarr.ig<-intergraph::asIgraph(gotmarr.stat)
+      V(gotmarr.ig)$name<-V(gotmarr.ig)$vertex.names
+      
+      #all partners
+      partners<-relationships%>%
+        filter(Type!="Engaged")%>%
+      group_by(From,To)%>%
+        summarise(weight=n())
+      
+      #Lets create a igraph object
+      network_igraph<-graph_from_edgelist(as.matrix(partners[,1:2]), directed=FALSE)
+      E(network_igraph)$weight<-partners$weight
+      gotpart.mat<-as.matrix(as_adj(network_igraph,attr="weight"))
+      
+      #igraph won't correct for strange edgelist with some asymmetry
+      #export to statnet to fix and then reimport
+      gotpart.stat <- network(gotpart.mat,ignore.eval=FALSE, names.eval="weight", directed = FALSE, loops=TRUE)
+      gotpart.stat%v%"color"<-family$Color[match(gotpart.stat%v%"name", family$Family)]
+      gotpart.stat%v%"region"<-family$Region[match(gotpart.stat%v%"name", family$Family)]
+      gotpart.mat<-as.matrix.network(gotpart.stat,attrname = "weight")
+  
+      #reimport to igraph
+      gotpart.ig<-intergraph::asIgraph(gotpart.stat)
+      V(gotpart.ig)$name<-V(gotpart.ig)$vertex.names
+      
+  #Let's remove unessesary objects
+  rm(family)
+  rm(marriages)
+  rm(network_igraph)
+  rm(partners)
+```
+
+# Game of Thrones Marriages
+```{r}
+plot.igraph(gotmarr.ig, 
+            vertex.label.cex=1)
+```
+# Network Size
+```{r}
+vcount(gotmarr.ig)
+ecount(gotmarr.ig)
+```
+# Attributes
+```{r}
+is_bipartite(gotmarr.ig)
+is_directed(gotmarr.ig)
+is_weighted(gotmarr.ig)
+vertex_attr_names(gotmarr.ig)
+edge_attr_names(gotmarr.ig)
+```
+
+
+
+
+# Centrality Measures
+
+### Betweenness Centrality
+
+```{r}
+igraph::betweenness(gotmarr.ig, directed=TRUE)
+```
+
+### Betweeness Centralization
+```{r}
+centr_betw(gotmarr.ig,directed=T)$centralization
+```
+
+### Closeness Centralization
+
+```{r warning=FALSE}
+centr_clo(gotmarr.ig)$centralization
+```
+
+# Structural Equivalance
+```{r}
+gotmarr.nodes<-data.frame(name=gotmarr.stat%v%"vertex.names",
+        degree=sna::degree(gotmarr.stat,gmode="graph"),
+        degree.wt=strength(gotmarr.ig),
+        bonpow=bonpow(gotmarr.stat),
+        betweenness=betweenness(gotmarr.stat, gmode="graph"),
+        close=sna::closeness(gotmarr.stat, gmode="graph"),
+        constraint=constraint(gotmarr.ig))
+
+#got partners
+gotmarr.se<-equiv.clust(gotmarr.stat, equiv.fun="sedist", method="hamming",mode="graph")
+
+#plot equivalence clustering
+plot(gotmarr.se,labels=gotmarr.se$glabels)
+rect.hclust(gotmarr.se$cluster,h=15)
+
+```
+
+```{r}
+library(ggnetwork)
+#blockmodel and select partitions
+blk_mod<-blockmodel(gotmarr.stat,gotmarr.se,k=4)
+#print blockmodel object
+blk_mod$block.model
+#plot blockmodel partitions
+plot.block(blk_mod,main="GoT Marriages, 4 Partitions", cex.lab=.5)
+```
+

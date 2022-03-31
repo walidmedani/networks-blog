@@ -39,3 +39,13 @@ create_post("Assignment_4")
 library(distill)
 create_post("Assignment_5")
 ```
+
+```{r include=FALSE}
+library(distill)
+create_post("Assignment_6")
+```
+
+```{r include=FALSE}
+library(distill)
+create_post("Assignment_7")
+```

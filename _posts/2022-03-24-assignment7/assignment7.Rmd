@@ -1,0 +1,184 @@
+---
+title: "Assignment_7"
+description: |
+  Community Detection (Marriages between characters in the Game of Thrones Novels)
+author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-03-24
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(igraph)
+library(tidyverse)
+library(statnet)
+```
+
+```{r include=FALSE}
+#First let's do some set up
+  if("statnet"   %in% rownames(installed.packages()) == FALSE) {install.packages("statnet")}
+  if("igraph"   %in% rownames(installed.packages()) == FALSE) {install.packages("igraph")}
+  if("gsheet"   %in% rownames(installed.packages()) == FALSE) {install.packages("gsheet")}
+  
+
+  library(statnet)
+  library(igraph)
+  library(gsheet)
+  library(gdata)
+
+#First let's load the data
+  ##data in edgelist format
+  relationships<-gsheet2tbl("https://docs.google.com/spreadsheets/d/1THL4Q4NO4XdFtF2Lgk3lpGuPOffLIp2Nk6y3XgvHnGs/edit?usp=sharing")
+  relationships$To<-ifelse(relationships$To=="Unknown",ifelse(relationships$From=="Frey", "North", relationships$From),relationships$To)
+
+  ##also import family and color information to match
+  family<-gsheet2tbl("https://docs.google.com/spreadsheets/d/19w8dij4snBSREMpDoGzHXGC4K6Su0D8j2SY1rPYFSLQ/edit?usp=sharing")
+  
+##all marriages
+  marriages<-relationships%>%
+  filter(Type!="Affair")%>%
+  group_by(From,To)%>%
+  summarise(weight=n())
+
+#Lets create a igraph object
+      network_igraph<-graph_from_edgelist(as.matrix(marriages[,1:2]), directed=FALSE)
+      E(network_igraph)$weight<-marriages$weight
+      gotmarr.mat<-as.matrix(as_adj(network_igraph, attr="weight"))
+      
+      #igraph won't correct for strange edgelist with some asymmetry
+      #export to statnet to fix and then reimport
+      gotmarr.stat <- network(gotmarr.mat,ignore.eval=FALSE, names.eval="weight",directed = FALSE, loops=TRUE )
+      gotmarr.stat%v%"color"<-family$Color[match(gotmarr.stat%v%"name", family$Family)]
+      gotmarr.stat%v%"region"<-family$Region[match(gotmarr.stat%v%"name", family$Family)]
+      gotmarr.mat<-as.matrix.network(gotmarr.stat,attrname = "weight")
+      
+      #reimport to igraph
+      gotmarr.ig<-intergraph::asIgraph(gotmarr.stat)
+      V(gotmarr.ig)$name<-V(gotmarr.ig)$vertex.names
+      
+      #all partners
+      partners<-relationships%>%
+        filter(Type!="Engaged")%>%
+      group_by(From,To)%>%
+        summarise(weight=n())
+      
+      #Lets create a igraph object
+      network_igraph<-graph_from_edgelist(as.matrix(partners[,1:2]), directed=FALSE)
+      E(network_igraph)$weight<-partners$weight
+      gotpart.mat<-as.matrix(as_adj(network_igraph,attr="weight"))
+      
+      #igraph won't correct for strange edgelist with some asymmetry
+      #export to statnet to fix and then reimport
+      gotpart.stat <- network(gotpart.mat,ignore.eval=FALSE, names.eval="weight", directed = FALSE, loops=TRUE)
+      gotpart.stat%v%"color"<-family$Color[match(gotpart.stat%v%"name", family$Family)]
+      gotpart.stat%v%"region"<-family$Region[match(gotpart.stat%v%"name", family$Family)]
+      gotpart.mat<-as.matrix.network(gotpart.stat,attrname = "weight")
+  
+      #reimport to igraph
+      gotpart.ig<-intergraph::asIgraph(gotpart.stat)
+      V(gotpart.ig)$name<-V(gotpart.ig)$vertex.names
+      
+  #Let's remove unessesary objects
+  rm(family)
+  rm(marriages)
+  rm(network_igraph)
+  rm(partners)
+  
+  gotmarr.nodes<-data.frame(name=gotmarr.stat%v%"vertex.names",
+        degree=sna::degree(gotmarr.stat,gmode="graph"),
+        degree.wt=strength(gotmarr.ig),
+        bonpow=sna::bonpow(gotmarr.stat),
+        betweenness=sna::betweenness(gotmarr.stat, gmode="graph"),
+        close=sna::closeness(gotmarr.stat, gmode="graph"),
+        constraint=constraint(gotmarr.ig))
+```
+
+# Game of Thrones Marriages
+```{r}
+plot.igraph(gotmarr.ig, 
+            vertex.label.cex=1)
+```
+# Network Size
+```{r}
+vcount(gotmarr.ig)
+ecount(gotmarr.ig)
+```
+# Attributes
+```{r}
+is_bipartite(gotmarr.ig)
+is_directed(gotmarr.ig)
+is_weighted(gotmarr.ig)
+vertex_attr_names(gotmarr.ig)
+edge_attr_names(gotmarr.ig)
+```
+
+# Community Detection
+
+## Fast and greedy
+```{r}
+#Run clustering algorithm: fast_greedy
+got.fg<-cluster_fast_greedy(gotmarr.ig)
+#Retrieve list of nodes in communities
+igraph::groups(got.fg)
+plot(got.fg,gotmarr.ig)
+```
+## Walktrap
+```{r}
+nodes.by.gp<-function(network.nodes, groupvar){
+  network.nodes%>%
+  select(-name)%>%
+  group_by_(groupvar) %>%
+  mutate(n=n())%>%
+  summarise_all(mean, na.rm=TRUE)%>%
+  as.matrix()%>%
+  print(digits=2)
+}
+
+
+got.wt<-walktrap.community(gotmarr.ig)
+igraph::groups(got.wt)
+gotmarr.nodes$comm.wt<-got.wt$membership
+nodes.by.gp(gotmarr.nodes,"comm.wt")
+plot(got.wt,gotmarr.ig)
+```
+
+## Label Propagation
+```{r}
+got.lab<-walktrap.community(gotmarr.ig)
+igraph::groups(got.lab)
+gotmarr.nodes$comm.lab<-got.lab$membership
+nodes.by.gp(gotmarr.nodes,"comm.lab")
+plot(got.lab,gotmarr.ig)
+```
+## Edge betweeness
+```{r warning=FALSE}
+got.edge<-edge.betweenness.community(gotmarr.ig)
+igraph::groups(got.edge)
+gotmarr.nodes$comm.edge<-got.edge$membership
+nodes.by.gp(gotmarr.nodes,"comm.edge")
+plot(got.edge,gotmarr.ig)
+```
+
+## Eigenvector
+```{r}
+got.eigen<-leading.eigenvector.community(gotmarr.ig)
+igraph::groups(got.eigen)
+gotmarr.nodes$comm.eigen<-got.eigen$membership
+nodes.by.gp(gotmarr.nodes,"comm.eigen")
+plot(got.eigen,gotmarr.ig)
+```
+
+# Modularity Scores
+```{r echo=FALSE}
+mods<-c(fastgreedy=modularity(got.fg), walktrap=modularity(got.wt), label=modularity(got.lab), edge=modularity(got.edge), eigen=modularity(got.eigen))
+mods
+```
+
+# Observations
+For the GOT marriages data set, the fast/greedy, walktrap, and label propagation made the most sense in identifying communities. Fast and greedy was the most successful method due to it partitioning "Baratheon", "Reach", and "Tyrell" as a separate community from the northern kingdoms of "Tully" and "Arryn" where there was a weak or no relationship between the factions.
+
+Edge betweeness failed to identify any communities within the dataset, whereas the Eigenvector failed to cluster some memberships such as the Reach being distinct from the Tyrell family (rulers of the region) and has strong marriage connections with the Baratheons.
+
