@@ -2,17 +2,25 @@
 title: "Assignment_6"
 description: |
   Roles and Blockmodels (Marriages between characters in the Game of Thrones Novels)
-  author:
+author:
   - name: Walid Medani
     url: https://walidmedani.github.io/networks-blog/
-author: []
 date: 2022-03-10
 output:
   distill::distill_article:
     self_contained: false
 ---
 
-```{r}
+```{r echo=FALSE}
+library(igraph)
+library(tidyverse)
+library(statnet)
+library(gsheet)
+  library(gdata)
+  library(ggnetwork)
+```
+
+```{r echo=FALSE}
 #First let's do some set up
   if("statnet"   %in% rownames(installed.packages()) == FALSE) {install.packages("statnet")}
   if("igraph"   %in% rownames(installed.packages()) == FALSE) {install.packages("igraph")}
@@ -144,12 +152,27 @@ rect.hclust(gotmarr.se$cluster,h=15)
 ```
 
 ```{r}
-library(ggnetwork)
+plot.block<-function(x=blk_mod, main=NULL, cex.lab=1){
+  plot.sociomatrix(x$blocked.data, labels=list(x$plabels,x$plabels),
+                   main=main, drawlines = FALSE, cex.lab=cex.lab)
+  for (j in 2:length(x$plabels)) if (x$block.membership[j] !=
+                                     x$block.membership[j-1]) 
+    abline(v = j - 0.5, h = j - 0.5, lty = 3, xpd=FALSE)
+}
+
 #blockmodel and select partitions
 blk_mod<-blockmodel(gotmarr.stat,gotmarr.se,k=4)
 #print blockmodel object
 blk_mod$block.model
 #plot blockmodel partitions
 plot.block(blk_mod,main="GoT Marriages, 4 Partitions", cex.lab=.5)
+
+#blockmodel and select partitions
+blk_mod2<-blockmodel(gotmarr.stat,gotmarr.se,k=6)
+#print blockmodel object
+blk_mod2$block.model
+#plot blockmodel partitions
+plot.block(blk_mod2,main="GoT Marriages, 6 Partitions", cex.lab=.5)
 ```
+Plotting the block role assignments gives us easy insight into observing marriages between the houses. We see that eastern continents and houses didn't have many marriage connections between northern houses such as Tully, Vale, and Arryn yet they do with other northern houses such as the Starks and Frey.
 
