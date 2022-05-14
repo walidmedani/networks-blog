@@ -1,0 +1,480 @@
+---
+title: "otherdata"
+author: "Walid Medani"
+date: "5/13/2022"
+output: html_document
+---
+```{r}
+#STATNET
+library(intergraph)
+library(network)
+net <- asNetwork(mt)
+
+# net.se<-equiv.clust(net, equiv.fun="sedist", method="hamming",mode="graph")
+
+
+library(concoR)
+g <- mt
+mat <- as.matrix(get.adjacency(g))
+
+m0 <- cor(mat) # Calculate a correlation matrix
+round(m0, 2)   # Round the output to 2 significant digits
+
+blks <- concor_hca(list(mat), p = 2) 
+blks
+
+blk_mod <- blockmodel(net, blks$block) 
+blk_mod
+plot(blk_mod)
+
+V(g)$blocks <- blks$block
+plot.igraph(g, vertex.color=V(g)$blocks) # plot in igraph
+
+```
+```{r}
+library("readxl")
+library(stringr)
+tweets.df <- read_excel("~/networks-blog/bolivianetwork.xlsx")
+tweets.df <- tweets.df %>%
+  rename(mentions_screen_name = `inreply_to user`)
+
+tweets.df$mentions_screen_name <- gsub("https://twitter.com/","", as.character(tweets.df$mentions_screen_name))
+tweets.df$mentions_screen_name <- gsub("http://twitter.com/","", as.character(tweets.df$mentions_screen_name))
+
+exploded_data <- tweets.df %>% 
+                  rename(mentioned_users = mentions_screen_name) %>% 
+                  rename(weight = retweetCount)
+
+```
+
+```{r}
+authors = unique(exploded_data$username)
+
+exploded_data %>%
+    select(username, mentioned_users, weight) %>%
+    xtabs(~ username + mentioned_users + weight, data = .) ->
+    network_data
+
+authors_mentioned <- intersect(authors, colnames(network_data))
+unmentioned_authors <- setdiff(rownames(network_data), authors_mentioned)
+missing_authors <- matrix(0, ncol = length(unmentioned_authors),
+                          nrow = nrow(network_data), dimnames = list(rownames(network_data), unmentioned_authors))
+
+graph_data <- network_data[, authors_mentioned]
+graph_data <- cbind(graph_data, missing_authors)
+
+remove = setdiff(colnames(graph_data), rownames(graph_data))
+
+graph_data <- graph_data[, !(colnames(graph_data) %in% remove)]
+
+dim(graph_data)
+```
+
+```{r}
+graph <- graph_from_adjacency_matrix(graph_data,
+                                     mode = "directed", 
+                                     weighted = T, 
+                                     add.colnames = T, 
+                                     add.rownames = T,
+                                     diag = F)
+main <- induced_subgraph(
+  g, V(g)[components(g)$membership == which.max(components(g)$csize)]
+)
+
+V(graph)$comp <- components(graph)$membership
+main <- induced_subgraph(graph,V(graph)$comp==1)
+
+graph %>%
+    ggplot(aes(x = x, y = y, xend = xend, yend = yend, label = `TRUE.`)) +
+    geom_nodes(aes(size = weight)) +
+    geom_edges() +
+    theme_blank()
+```
+
+```{r}
+plot(main, edge.arrow.size = .01, vertex.label=NA, vertex.size=3)
+#edge.label=round(E(graph)$weight)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+# Create graph
+filter(tweets.df, retweetCount > 0) %>% 
+  select(username, mentions_screen_name, retweetCount) %>%
+  unnest(mentions_screen_name) %>% 
+  filter(!is.na(mentions_screen_name)) %>% 
+  graph_from_data_frame() -> net
+
+plot(net,vertex.label=NA,vertex.size=1)
+```
+```{r}
+edgelist <- as.data.frame(cbind(as.character(tweets.df$username), as.character(tweets.df$mentions_screen_name), as.numeric(tweets.df$retweetCount)))
+edgelist[] <- lapply(edgelist, as.character)
+
+edgelist <- edgelist %>% 
+filter(V3 > 0) %>% 
+na.omit(edgelist)
+
+edgelist <- edgelist %>%
+  rename(weight = V3)
+
+
+edgematrix<-graph.edgelist(as.matrix(edgelist[,c("V1","V2")]),directed=T)
+adj <- as.matrix(get.adjacency(edgematrix)) 
+
+plot(edgelist,vertex.size=3)
+
+names(edgelist)[1] <- "Sender"
+names(edgelist)[2] <- "Receiver"
+head(edgelist)
+
+
+interactions_sent <- edgelist %>% 
+  count(Sender) %>% 
+  arrange(desc(n))
+
+interactions_sent
+```
+
+```{r}
+library(tidygraph)
+edgelist2 <- edgelist %>% 
+  # the first of the two lines below filters to include only senders in the interactions_sent data frame
+  # the second line does the same, for receivers
+  filter(Sender %in% interactions_sent$Sender,
+         Receiver %in% interactions_sent$Sender)
+
+g <- 
+  as_tbl_graph(edgelist2)
+g
+```
+
+
+```{r}
+letters <- tweets.df %>%
+  rename(source = username) %>% 
+  rename(destination = mentions_screen_name) %>% 
+  rename(weight = retweetCount) 
+
+  na.omit(letters)
+
+sources <- letters %>%
+  distinct(source) %>%
+  rename(label = source)
+
+destinations <- letters %>%
+  distinct(destination) %>%
+  rename(label = destination)
+
+nodes <- full_join(sources, destinations, by = "label")
+nodes <- nodes %>% rowid_to_column("id")
+nodes
+
+per_route <- letters %>%  
+  group_by(source, destination) %>%
+  summarise(weight = n()) %>% 
+  ungroup()
+per_route
+
+edges <- per_route %>% 
+  left_join(nodes, by = c("source" = "label")) %>% 
+  rename(from = id)
+
+edges <- edges %>% 
+  left_join(nodes, by = c("destination" = "label")) %>% 
+  rename(to = id)
+
+edges <- select(edges, from, to, weight)
+edges
+
+```
+
+```{r}
+routes_igraph <- graph_from_data_frame(d = edges, vertices = nodes, directed = FALSE)
+plot(routes_igraph, edge.arrow.size = 0.1, vertex.label=NA)
+
+plot(routes_igraph,
+    vertex.label = NA,
+    vertex.color = rgb(0.8,0.2,0.2,0.9),           # Node color
+    vertex.frame.color = "Forestgreen",            # Node border color
+    vertex.shape=c("circle","square"),             # One of “none”, “circle”, “square”, “csquare”, “rectangle” “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”
+    vertex.size=c(1:5),                          # Size of the node (default is 15)
+    vertex.size2=NA,                               # The second size of the node (e.g. for a rectangle)
+    )
+```
+
+
+
+
+
+```{r}
+vcount(edgematrix)
+ecount(wardata)
+
+is_bipartite(edgematrix)
+is_directed(edgematrix)
+is_weighted(edgematrix)
+vertex_attr_names(edgematrix)
+edge_attr_names(wardata)
+
+
+igraph::dyad.census(edgematrix)
+igraph::triad_census(edgematrix)
+sum(igraph::triad_census(edgematrix))
+
+transitivity(edgematrix, type="global")
+transitivity(edgematrix, type="average")
+```
+
+```{r}
+library(ggraph)
+g %>%
+  # we chose the kk layout as it created a graph which was easy-to-interpret, but others are available; see ?ggraph
+  ggraph(layout = "kk") +
+  # this adds the points to the graph
+  geom_node_point() +
+  # this adds the links, or the edges; alpha = .2 makes it so that the lines are partially transparent
+  geom_edge_link(alpha = .2) +
+  # this last line of code adds a ggplot2 theme suitable for network graphs
+  theme_graph()
+```
+
+
+
+```{r}
+g %>% 
+  # this calculates the centrality of each individual using the built-in centrality_authority() function
+  mutate(centrality = centrality_authority()) %>% 
+  ggraph(layout = "kk") +
+  geom_edge_link(edge_colour = "black") + 
+  geom_node_point(aes(size = centrality), color = "purple") +
+  # this line colors the points based upon their centrality
+  scale_color_continuous(guide = 'legend') + 
+  geom_edge_link(alpha = .2) +
+  geom_node_text(aes(label = name)) +
+  vertex.
+  theme_graph()
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+network_mat<-t(as.matrix(tweets.df))%*%as.matrix(tweets.df) #n2xn2 (columns)
+
+network.ig<-graph.edgelist(as.matrix(tweets.df),directed=T)
+network.ig<-graph.adjacency(network_data,mode="directed")
+```
+
+
+# Test
+
+```{r}
+tweets <- tweets.df %>% 
+          rename(screen_name = username) %>% 
+          rename(text = tweet) %>% 
+          select(screen_name, text, mentions_screen_name, retweetCount)
+
+tweets <- na.omit(tweets)
+
+tweets <- tweets %>% 
+          drop_na(mentions_screen_name)
+
+tweets %>% 
+  group_by(screen_name) %>%
+  summarise(total_retweet = sum(retweetCount)) %>%
+  arrange(desc(total_retweet)) %>% 
+  head()
+
+tweets %>% 
+  select(screen_name, mentions_screen_name)
+
+
+edge_df <-
+tweets %>% 
+  select(screen_name, mentions_screen_name) %>% #Step 1
+  separate_rows(mentions_screen_name, sep = " ") %>% #Step 2
+  filter(mentions_screen_name != "") %>% #step 3
+  rename(from = screen_name,
+         to = mentions_screen_name) #Step 4
+
+edge_df
+
+
+nodes_df <- data.frame(name = unique(c(edge_df$from,edge_df$to)),
+                        stringsAsFactors = F)
+
+graph_tweets <- tbl_graph(nodes = nodes_df,
+                          edges = edge_df,
+                          directed = T
+                          )
+
+plot(graph_tweets, edge.arrow.size = 0.1, vertex.label=NA, vertex.size=.5)
+```
+
+
+```{r}
+graph_tweets <- graph_tweets %>% 
+  activate(nodes) %>%
+  mutate(degree = centrality_degree(), # Degree centrality
+         between = centrality_betweenness(normalized = T), # Betweeness centrality
+         closeness = centrality_closeness(), # Closeness centrality
+         eigen = centrality_eigen() # Eigen centrality
+         )
+network_act_df <- graph_tweets %>% 
+  activate(nodes) %>% 
+  as.data.frame()
+
+pop_username <- data.frame(
+  network_act_df %>% arrange(-degree) %>% select(name) %>% head(),
+  network_act_df %>% arrange(-between) %>% select(name) %>% head(),
+  network_act_df %>% arrange(-closeness) %>% select(name) %>% head(),
+  network_act_df %>% arrange(-eigen) %>% select(name) %>% head()
+) %>% setNames(c("Degree","Betweenness","Closeness","Eigen"))
+
+pop_username
+
+
+tweets %>% 
+  filter(mentions_screen_name == "GiovannaZeball4") %>%
+  group_by(mentions_screen_name, text) %>% 
+  tally() %>% 
+  arrange(-n) %>%
+  pull(text) %>% 
+  head(3)
+```
+
+
+# Graph Visualization
+
+```{r}
+set.seed(123)
+graph_tweets <- graph_tweets %>% 
+  activate(nodes) %>% 
+  mutate(community = group_louvain()) %>% # clustering
+  activate(edges) %>% 
+  filter(!edge_is_loop())  # Remove loop edges
+
+graph_tweets %>% 
+  activate(nodes) %>% 
+  as.data.frame() %>% 
+  count(community)
+
+
+
+
+important_user <- function(data) {
+  name_person <- data %>%
+  as.data.frame() %>% 
+  filter(community %in% 1:5) %>% 
+  select(-community) %>% 
+  pivot_longer(-name, names_to = "measures", values_to = "values") %>% 
+  group_by(measures) %>% 
+  arrange(desc(values)) %>% 
+  slice(1:6) %>% 
+  ungroup() %>% 
+  distinct(name) %>% 
+  pull(name)
+  
+  return(name_person)
+}
+
+important_person <- graph_tweets %>% 
+  activate(nodes) %>% 
+  important_user()
+
+
+
+set.seed(123)
+graph_tweets %>%
+  activate(nodes) %>%
+  mutate(ids = row_number(),
+         community = as.character(community)) %>%
+  filter(community %in% 1:3) %>% # number of community.
+  arrange(community,ids) %>%
+  mutate(node_label = ifelse(name %in% important_person, name,NA)) %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(alpha = 0.3 ) +
+  geom_node_point(aes(size = degree, fill = community), shape = 21, alpha = 0.7, color = "grey30") +
+  geom_node_label(aes(label = node_label), repel = T, alpha = 0.8 ) +
+  guides(size = "none") +
+  labs(title = "Top 3 Communities",
+       color = "Interaction",
+       fill = "Community") +
+  theme_void() +
+  theme(legend.position = "top")
+```
+
+
+
+```{r}
+
+net_data <- tweets.df %>% 
+          rename(screen_name = username) %>% 
+          rename(weight = retweetCount) %>% 
+          select(screen_name, mentions_screen_name, weight)
+
+net_data <- na.omit(net_data) %>% 
+            unique()
+
+net_data <- net_data %>% 
+            distinct(mentions_screen_name, screen_name, .keep_all = T)
+#This is an affiliation network, based on shared participation in conflicts#
+mid_net_2<-graph.edgelist(as.matrix(net_data[,c("screen_name","mentions_screen_name")]),directed=T)
+
+#An easy way to collapse this is through matrix multiplication#
+#First, get the full adjacency matrix#
+mid_mat<-as.matrix(get.adjacency(mid_net_2))
+dim(mid_mat) #Square matrix
+row.names(mid_mat)[1:10] #Mix of countries and conflicts
+colnames(mid_mat)[1:10] #Same in rows
+
+#Next, isolate rows to conflicts and columns to states#
+mid_mat<-mid_mat[which(row.names(mid_mat) %in% net_data$screen_name),
+                 which(colnames(mid_mat) %in% net_data$mentions_screen_name)]
+dim(mid_mat) #Rectangular matrix - conflict x country
+row.names(mid_mat)[1:10] #Conflicts in rows
+colnames(mid_mat)[1:10] #Countries in columns
+
+#Finally, multiply by the transposition of the network#
+#This either gives us a 1-mode conflict network based on shared participants...#
+conflict_mat<-mid_mat %*% t(mid_mat)
+row.names(conflict_mat)[1:10] #Only conflicts
+colnames(conflict_mat)[1:10] #in columns too
+
+#... or the 1- mode state network, based on shared conflicts#
+state_mat<-t(mid_mat) %*% mid_mat
+row.names(state_mat)[1:10] #Only states
+colnames(state_mat)[1:10] #in columns too
+#Edges are number of conflicts in which any two countries both participated#
+wardata<-graph.adjacency(state_mat,mode="directed",weighted=T,diag =F)
+```
+
+```{r}
+plot(wardata,vertex.label=NA,vertex.size=3, edge.arrow.size = 0.1)
+```
