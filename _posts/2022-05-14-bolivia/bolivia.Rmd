@@ -58,11 +58,11 @@ net
 
 # Descriptive Statistics
 
-Many users are interconnected within this sparsely connected graph due to direct ties measuring mentions rather than retweets, meaning the authors had to mention the user within their tweet rather than simply retweeting. There are 966 total components with the main component having 3327 points whereas the minor component only contains 14. The network is decentralized (18%) with a small number of nodes representing the information flow, however the centralization score almost doubles when we focus on the main component. The low global transivity score showcases that there isn't a shared attribute (ideology, opinions, etc.) clustering nodes together when they're mentioning users in their tweets. This transitivity trend continues at the local level of the ego network (when users mention each other) even when the proportion of mutual connections is measured via reciprocity.
+Many users are interconnected within this sparsely connected graph due to direct ties measuring mentions rather than retweets, meaning the authors had to mention the user within their tweet rather than simply retweeting. There are 966 total components with the main component having 3327 points whereas the minor component only contains 14. The network is fairly centralized (49%) with a small number of nodes representing the information flow, however the centralization score almost doubles when we focus on the main component. The low global transivity score showcases that there isn't a shared attribute (ideology, opinions, etc.) clustering nodes together when they're mentioning users in their tweets. This transitivity trend continues at the local level of the ego network (when users mention each other) even when the proportion of mutual connections is measured via reciprocity.
 
 The average number of steps along the shortest paths of network nodes is 27.6, showing an extent of inefficiency in information. The distribution of degrees shows a lack of statistical dispersion, with the average user only having one link for both mentioning another twitter user or receiving a mention.
 
-```{r}
+```{r echo=TRUE}
 # DESCRIPTIVE STATS
 
 vcount(mt)
@@ -158,7 +158,7 @@ graph3
 
 Measuring popularity/status with in/out degree centrality made the most sense for this dataset due to it being directed and is simply looking at mentions of usernames. The ousted president Evo Morales (evoespueblo) received the most mentions by twitter users followed by La Razón, one of the largest newspaper publications within Bolivia.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 indegree_mt <- sort(degree(mt,mode = "in"),decreasing = TRUE)
 indegree_mt[1:10] %>% #show the top 10 users ranked by in-degree 
 kbl() %>%
@@ -168,7 +168,7 @@ scroll_box(width = "100%", height = "auto")
 
 And below we see the users who most mentioned other users, finding a mix of journalists, supporters, and opponents of Evo Morales.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 outdegree_mt <- sort(degree(mt,mode = "out"),decreasing = TRUE)
 outdegree_mt[1:10] %>% #show the top 10 users ranked by out-degree
 kbl() %>%
@@ -179,7 +179,7 @@ scroll_box(width = "100%", height = "auto")
 
 Below are users who acted as a bridge between the other nodes within the network by measuring betweenness centrality.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 # BETWEENESS 
 bt <- sort(betweenness(mt, directed=T), decreasing = TRUE)
 bt[1:10] %>%  #show the top 10 nodes by betweenness centrality 
@@ -190,7 +190,7 @@ scroll_box(width = "100%", height = "auto")
 
 Using Google's PageRank algorithm we can find the biggest influencers in this network through the ranks of search results.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 pr <- page_rank(mt, algo = c("prpack"))
 pr <- sort(pr$vector,decreasing = TRUE)
 pr[1:10] %>% #show the top 10 users ranked by PageRank
@@ -201,7 +201,7 @@ scroll_box(width = "100%", height = "auto")
 
 Total measures of popularity/status
 
-```{r include=FALSE}
+```{r echo=TRUE}
 # NODES
 degree.nodes<-data.frame(name=V(mt)$name,
          totdegree=igraph::degree(mt, loops = TRUE), 
@@ -221,7 +221,7 @@ scroll_box(width = "100%", height = "auto")
 
 To discover communities, the walktrap community detection method was used due to it handling weights, increasing the probability of it going towards its direction. Below is a visualization of the communities color coded by the walktrap method.
 
-```{r}
+```{r echo=TRUE}
 # COMMUNITY
 
 #mt.eb <- cluster_edge_betweenness(mt) 
