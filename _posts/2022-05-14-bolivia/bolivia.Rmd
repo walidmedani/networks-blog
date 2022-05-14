@@ -1,7 +1,7 @@
 ---
-title: "2019 Bolivian Political Crisis"
+title: "Bolivia"
 description: |
-  A Network Analysis.
+  A Network Analysis of the 2019 Bolivian Political Crisis.
 author:
   - name: Walid Medani
     url: https://walidmedani.github.io/networks-blog/

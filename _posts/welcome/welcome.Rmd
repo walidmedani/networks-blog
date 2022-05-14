@@ -57,10 +57,5 @@ create_post("Assignment_8")
 
 ```{r include=FALSE}
 library(distill)
-create_post("finalpaper")
-```
-
-```{r include=FALSE}
-library(distill)
 create_post("Bolivia")
 ```
