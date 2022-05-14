@@ -96,7 +96,6 @@ head(igraph::degree(mt))
 # Degrees Histogram
 mt.nodes <- data.frame(name=V(mt)$name, degree=igraph::degree(mt)) %>%
   arrange(desc(degree))
-head(mt.nodes)
 
 
 summary(mt.nodes)
@@ -110,7 +109,7 @@ mt.nodes <- mt.nodes %>%
            outdegree=igraph::degree(mt, mode="out", loops=TRUE))
 summary(mt.nodes) %>% 
 kbl() %>%
-kable_material(c("striped", "hover")) %>% 
+kable_material_dark(c("striped", "hover")) %>% 
 scroll_box(width = "100%", height = "auto")
 ```
 
@@ -118,42 +117,40 @@ scroll_box(width = "100%", height = "auto")
 
 The first graph shows the overall network graph, when a user mentions their own username.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 #VIZ
-#pr <-page_rank(mt, algo = c("prpack"))
-#V(mt)$size <- pr$vector*100  #set node size by PageRank scores.
-
-
 kcore <- coreness(mt, mode="all") 
 twocore <- induced_subgraph(mt, kcore>=1)
 
-visIgraph(twocore,idToLabel = TRUE,layout = "layout_nicely") %>%
+graph1 <- visIgraph(twocore,idToLabel = TRUE,layout = "layout_nicely") %>%
   visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) 
+graph1
 
 ```
 
 Here kcore = 4, to identify a smaller subset of interconnected users that have at least 4 edges with other users in the core.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 #VIZ 2
 kcore4 <- coreness(mt, mode="all") 
 fourcore <- induced_subgraph(mt, kcore4>=4)
 
-visIgraph(fourcore,idToLabel = TRUE,layout = "layout_nicely") %>%
-  visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) 
+graph2 <- visIgraph(fourcore,idToLabel = TRUE,layout = "layout_nicely") %>%
+  visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE)
+graph2
 ```
 
 This visualization lowers kcore = 1 but focuses on the main component.
 
-```{r include=FALSE}
+```{r echo=TRUE}
 #comp viz
 
 kcore1 <- coreness(maincomponent, mode="all") 
 onecore <- induced_subgraph(maincomponent, kcore1>=1)
 
-visIgraph(onecore,idToLabel = TRUE,layout = "layout_nicely") %>%
+graph3 <- visIgraph(onecore,idToLabel = TRUE,layout = "layout_nicely") %>%
   visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) 
-
+graph3
 ```
 
 
@@ -165,7 +162,7 @@ Measuring popularity/status with in/out degree centrality made the most sense fo
 indegree_mt <- sort(degree(mt,mode = "in"),decreasing = TRUE)
 indegree_mt[1:10] %>% #show the top 10 users ranked by in-degree 
 kbl() %>%
-kable_material(c("striped", "hover")) %>% 
+kable_material_dark(c("striped", "hover")) %>% 
 scroll_box(width = "100%", height = "auto")
 ```
 
@@ -175,7 +172,7 @@ And below we see the users who most mentioned other users, finding a mix of jour
 outdegree_mt <- sort(degree(mt,mode = "out"),decreasing = TRUE)
 outdegree_mt[1:10] %>% #show the top 10 users ranked by out-degree
 kbl() %>%
-kable_material(c("striped", "hover")) %>% 
+kable_material_dark(c("striped", "hover")) %>% 
 scroll_box(width = "100%", height = "auto")
 ```
 
@@ -187,7 +184,7 @@ Below are users who acted as a bridge between the other nodes within the network
 bt <- sort(betweenness(mt, directed=T), decreasing = TRUE)
 bt[1:10] %>%  #show the top 10 nodes by betweenness centrality 
 kbl() %>%
-kable_material(c("striped", "hover")) %>% 
+kable_material_dark(c("striped", "hover")) %>% 
 scroll_box(width = "100%", height = "auto")
 ```
 
@@ -198,7 +195,7 @@ pr <- page_rank(mt, algo = c("prpack"))
 pr <- sort(pr$vector,decreasing = TRUE)
 pr[1:10] %>% #show the top 10 users ranked by PageRank
 kbl() %>%
-kable_material(c("striped", "hover")) %>% 
+kable_material_dark(c("striped", "hover")) %>% 
 scroll_box(width = "100%", height = "auto")
 ```
 
@@ -215,8 +212,8 @@ degree.nodes<-data.frame(name=V(mt)$name,
 
 arrange(degree.nodes, desc(indegree)) %>%
   head() %>% 
-  kbl() %>%
-kable_material(c("striped", "hover")) %>% 
+kbl() %>%
+kable_material_dark(c("striped", "hover")) %>% 
 scroll_box(width = "100%", height = "auto")
 ```
 
@@ -231,7 +228,7 @@ To discover communities, the walktrap community detection method was used due to
 
 mt.wt <- walktrap.community(mt, weights = TRUE)
 membership(mt.wt)[1:20]   #list only 10 nodes.
-#plot(mt.wt,mt, vertex.label=NA)
+
 
 rt <- mt
 V(rt)$color <- membership(mt.wt)
@@ -239,19 +236,13 @@ V(rt)$color <- membership(mt.wt)
 kcorewt <- coreness(rt, mode="all") 
 twocorewt <- induced_subgraph(rt, kcorewt>=2)
 
-visIgraph(twocorewt,idToLabel = TRUE,layout = "layout_nicely") %>%
+graph4 <- visIgraph(twocorewt,idToLabel = TRUE,layout = "layout_nicely") %>%
   visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) 
-```
-
-```{r}
-#library(blockmodeling)
-#mtmat<-as.matrix(as_adj(mt,attr = "nominations"))
-#inspect for accuracy
-#mtmat[1:5,1:5]
+graph4
 ```
 
 # Inferential Statistics
 
-By conditioning the transitivity (clustering) of the network on size, density, and dyads. We find that in a 1000 random networks, only the variable number of nodes is able to produce a greater value than our observation.
+By conditioning the transitivity (clustering) of the network on size, density, and dyads. We find that in 1,000 random networks, only the variable size (number of nodes) is able to produce a greater value than our observation.
 
 
