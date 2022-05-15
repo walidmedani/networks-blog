@@ -34,6 +34,23 @@
     "input_file": {}
   },
   {
+    "path": "posts/2022-05-15-blog-4/",
+    "title": "Blog 4",
+    "description": "Text As Data.",
+    "author": [
+      {
+        "name": "Walid Medani",
+        "url": "https://walidmedani.github.io/networks-blog/"
+      }
+    ],
+    "date": "2022-04-01",
+    "categories": [],
+    "contents": "\r\n\r\n\r\nlibrary(jsonlite)\r\nlibrary(dplyr)\r\nlibrary(sentimentr)\r\nlibrary(tidyverse)\r\nlibrary(quanteda)\r\nlibrary(readr)\r\nlibrary(tm)\r\n\r\n\r\n\r\nSo I ended up switching from rtweet to Academic Twitter API and ended up paying for premium twitter access since my request rates went over the limit. Below I read in the RDS file and convert tweets to ASCII to avoid character issues and emojis. I also remove html links, stopwords, punctuation, tabs, and the @ before usernames.\r\n\r\n\r\ntweets <- readRDS(\"~/networks-blog/boliviatweetsfile\")\r\ntweets <- iconv(tweets$text, to = \"ASCII\", sub = \" \")\r\ntweets <- gsub(\"(RT|via)((?:\\\\b\\\\W*@\\\\w+)+)\", \"\", tweets)  # Remove the \"RT\" (retweet) and usernames \r\ntweets = gsub(\"http.+ |http.+$\", \" \", tweets)  # Remove html links\r\ntweets = gsub(\"http[[:alnum:]]*\", \"\", tweets)\r\ntweets = gsub(\"[[:punct:]]\", \" \", tweets)  # Remove punctuation\r\ntweets = gsub(\"[ |\\t]{2,}\", \" \", tweets)  # Remove tabs\r\ntweets = gsub(\"^ \", \"\", tweets)  # Leading blanks\r\ntweets = gsub(\" $\", \"\", tweets)  # Lagging blanks\r\ntweets = gsub(\" +\", \" \", tweets) # General spaces \r\ntweets = tolower(tweets)\r\ntweets = unique(tweets)\r\nglimpse(tweets)\r\n\r\n\r\n chr [1:40843] \"1rudecruzan dredadonx maadynyc bolivia staged a mass strike after america staged a coup and removed their democ\"| __truncated__ ...\r\n\r\nCreating the corpus\r\n\r\n\r\ncorpus <- Corpus(VectorSource(tweets))\r\ncorpus <- tm_map(corpus, removeWords, stopwords(\"english\"))  \r\ncorpus <- tm_map(corpus, removeNumbers)\r\n\r\ncorpus <- tm_map(corpus, stemDocument)\r\ncorpus = tm_map(corpus, removeWords, c(\"amp\", \"will\", \"get\", \"can\", \"like\", \"say\", \"know\"))\r\n\r\n\r\n\r\nWordcloud of words mentioned at least 1,000 times. It’s clear that bolivia and coup are prominent so I want to remove them and see what the wordcloud looks like after.\r\n\r\n\r\nlibrary(wordcloud)\r\nset.seed(100)\r\nwordcloud(corpus, min.freq = 1000)\r\n\r\n\r\n\r\n\r\n\r\n\r\ncorpus2 <- Corpus(VectorSource(tweets))\r\ncorpus2 <- tm_map(corpus, removeWords, stopwords(\"english\"))  \r\ncorpus2 <- tm_map(corpus, removeNumbers)\r\n\r\ncorpus2 <- tm_map(corpus, stemDocument)\r\ncorpus2 = tm_map(corpus, removeWords, c(\"bolivia\", \"coup\", \"amp\", \"will\", \"get\", \"can\", \"like\", \"say\", \"know\"))\r\n\r\n\r\n\r\nThis gives a clearer picture on what’s going on. We see some words such as support,elect, peopl so I’m wondering if these are connected in a positive or negative way to the political crisis.\r\n\r\n\r\nlibrary(wordcloud)\r\nset.seed(100)\r\nwordcloud(corpus2, min.freq = 1000)\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+    "preview": "posts/2022-05-15-blog-4/blog-4_files/figure-html5/unnamed-chunk-4-1.png",
+    "last_modified": "2022-05-15T18:39:56-04:00",
+    "input_file": {}
+  },
+  {
     "path": "posts/2022-03-24-assignment7/",
     "title": "Assignment_7",
     "description": "Community Detection (Marriages between characters in the Game of Thrones Novels)",

@@ -11,5 +11,70 @@ output:
     self_contained: false
 ---
 
+```{r}
+library(jsonlite)
+library(dplyr)
+library(sentimentr)
+library(tidyverse)
+library(quanteda)
+library(readr)
+library(tm)
+```
 
+So I ended up switching from rtweet to Academic Twitter API and ended up paying for premium twitter access since my request rates went over the limit. Below I read in the RDS file and convert tweets to ASCII to avoid character issues and emojis. I also remove html links, stopwords, punctuation, tabs, and the @ before usernames.
+
+
+```{r}
+tweets <- readRDS("~/networks-blog/boliviatweetsfile")
+tweets <- iconv(tweets$text, to = "ASCII", sub = " ")
+tweets <- gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", tweets)  # Remove the "RT" (retweet) and usernames 
+tweets = gsub("http.+ |http.+$", " ", tweets)  # Remove html links
+tweets = gsub("http[[:alnum:]]*", "", tweets)
+tweets = gsub("[[:punct:]]", " ", tweets)  # Remove punctuation
+tweets = gsub("[ |\t]{2,}", " ", tweets)  # Remove tabs
+tweets = gsub("^ ", "", tweets)  # Leading blanks
+tweets = gsub(" $", "", tweets)  # Lagging blanks
+tweets = gsub(" +", " ", tweets) # General spaces 
+tweets = tolower(tweets)
+tweets = unique(tweets)
+glimpse(tweets)
+```
+
+Creating the corpus
+
+```{r}
+corpus <- Corpus(VectorSource(tweets))
+corpus <- tm_map(corpus, removeWords, stopwords("english"))  
+corpus <- tm_map(corpus, removeNumbers)
+
+corpus <- tm_map(corpus, stemDocument)
+corpus = tm_map(corpus, removeWords, c("amp", "will", "get", "can", "like", "say", "know"))
+```
+
+## Wordcloud of words mentioned at least 1,000 times. It's clear that bolivia and coup are prominent so I want to remove them and see what the wordcloud looks like after.
+
+
+```{r}
+library(wordcloud)
+set.seed(100)
+wordcloud(corpus, min.freq = 1000)
+```
+
+```{r}
+corpus2 <- Corpus(VectorSource(tweets))
+corpus2 <- tm_map(corpus, removeWords, stopwords("english"))  
+corpus2 <- tm_map(corpus, removeNumbers)
+
+corpus2 <- tm_map(corpus, stemDocument)
+corpus2 = tm_map(corpus, removeWords, c("bolivia", "coup", "amp", "will", "get", "can", "like", "say", "know"))
+```
+
+
+## This gives a clearer picture on what's going on. We see some words such as support,elect, peopl so I'm wondering if these are connected in a positive or negative way to the political crisis.
+
+```{r}
+library(wordcloud)
+set.seed(100)
+wordcloud(corpus2, min.freq = 1000)
+```
 
