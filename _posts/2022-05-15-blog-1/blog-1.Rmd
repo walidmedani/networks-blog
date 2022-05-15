@@ -1,0 +1,26 @@
+---
+title: "Blog 1"
+description: |
+  Text As Data.
+author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-02-20
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+# What are your research questions and which data are you interested in?
+
+I'm interested in analyzing how media coverage distorts bias or how hidden power relations in discourse are performed and maintained through linguistic forms.
+
+
+Possible research questions:
+
+US media’s Anti-Palestinian bias through the lens of passive vs. active voice.
+
+Sentiment analysis on the 2019 Bolivian Coup pre and post-American media outlet coverage.
+
+Has media coverage of Neo-nazis in Ukraine shifted throughout 2008-2022?

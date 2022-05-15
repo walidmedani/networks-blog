@@ -59,3 +59,8 @@ create_post("Assignment_8")
 library(distill)
 create_post("Bolivia")
 ```
+
+```{r include=FALSE}
+library(distill)
+create_post("Blog 1")
+```
