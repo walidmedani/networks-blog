@@ -15,19 +15,17 @@ editor_options:
 
 # Introduction
 
-In the wake of Bolivia’s 2019 general elections, the Organization of American States (OAS) claimed in its report that the socialist party of Evo Morales was rigging the election. As a result, protests from the opposing party erupted, eventually leading to a coup supported by the police and military. As a result, Jeanine Áñez of the opposition Democrat Social Movement, assumed the interim presidency of Bolivia. Evo Morales and other members of his party sought political asylum in Mexico citing concerns over their livelihood. 
+In the wake of Bolivia's 2019 general elections, the Organization of American States (OAS) claimed in its report that the socialist party of Evo Morales was rigging the election. As a result, protests from the opposing party erupted, eventually leading to a coup supported by the police and military. As a result, Jeanine Áñez of the opposition Democrat Social Movement, assumed the interim presidency of Bolivia. Evo Morales and other members of his party sought political asylum in Mexico citing concerns over their livelihood.
 
-Months later, multiple studies analyzing the election results found no statistical evidence for fraud and also pointed out errors in the coding of OAS’s report. With concerns of the OAS’s history of being a US sponsored organization that was utilized to stop communism in Latin America during the cold war; many left-wing proponents believed that the US backed right-wing coup of Bolivia was a ploy to exploit the country’s lithium reserves — its deposits being the second largest in the world. 
+Months later, multiple studies analyzing the election results found no statistical evidence for fraud and also pointed out errors in the coding of OAS's report. With concerns of the OAS's history of being a US sponsored organization that was utilized to stop communism in Latin America during the cold war; many left-wing proponents believed that the US backed right-wing coup of Bolivia was a ploy to exploit the country's lithium reserves --- its deposits being the second largest in the world.
 
-Earlier this year, Morales’s party won the re-election by a landslide and ousted Jeanine Áñez’s interim presidency that was marred by controversy and massacres. But concern over the US government’s and US media’s actions and influence still looms. 
-
+Earlier this year, Morales's party won the re-election by a landslide and ousted Jeanine Áñez's interim presidency that was marred by controversy and massacres. But concern over the US government's and US media's actions and influence still looms.
 
 # Data
 
-To analyze the network structure of this political crisis, 63,965 tweets were retrieved from the Academic Twitter API. Tweets were collected from the month of the 2019 crisis to the month before the 2020 election (09/10/2019 - 09/18/2020). The search query string only including tweets that matched two keywords from the following list: bolivia, coup, democracy, evo, morales, anez, jeanine. 
+To analyze the network structure of this political crisis, 63,965 tweets were retrieved from the Academic Twitter API. Tweets were collected from the month of the 2019 crisis to the month before the 2020 election (09/10/2019 - 09/18/2020). The search query string only including tweets that matched two keywords from the following list: bolivia, coup, democracy, evo, morales, anez, jeanine.
 
 The original data was in RDS format and converted into an edgelist representing the universe of cases. Data was transformed by only including tweets that mention another user in the dataframe column "mention_screen_name" with a minimum of 2 retweets. There are 5,539 nodes and what constitutes a node within this dataset is the original sender of a tweet. Ties are defined when a "sender" has a tweet mentioning another user. There are 6,986 ties and the ties are weighted by the count of retweets.
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
@@ -53,8 +51,6 @@ mat
 net <- asNetwork(mt)
 net
 ```
-
-
 
 # Descriptive Statistics
 
@@ -115,7 +111,7 @@ scroll_box(width = "100%", height = "auto")
 
 # Data Visualization
 
-The first graph shows the overall network graph, when a user mentions their own username.
+### The first graph shows the overall network graph, when a user mentions their own username.
 
 ```{r echo=TRUE}
 #VIZ
@@ -128,7 +124,7 @@ graph1
 
 ```
 
-Here kcore = 4, to identify a smaller subset of interconnected users that have at least 4 edges with other users in the core.
+### Here kcore = 4, to identify a smaller subset of interconnected users that have at least 4 edges with other users in the core.
 
 ```{r echo=TRUE}
 #VIZ 2
@@ -140,7 +136,7 @@ graph2 <- visIgraph(fourcore,idToLabel = TRUE,layout = "layout_nicely") %>%
 graph2
 ```
 
-This visualization lowers kcore = 1 but focuses on the main component.
+### This visualization lowers kcore = 1 but focuses on the main component.
 
 ```{r echo=TRUE}
 #comp viz
@@ -152,7 +148,6 @@ graph3 <- visIgraph(onecore,idToLabel = TRUE,layout = "layout_nicely") %>%
   visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) 
 graph3
 ```
-
 
 # Prominent Nodes
 
@@ -166,7 +161,7 @@ kable_material_dark(c("striped", "hover")) %>%
 scroll_box(width = "100%", height = "auto")
 ```
 
-And below we see the users who most mentioned other users, finding a mix of journalists, supporters, and opponents of Evo Morales.
+### And below we see the users who most mentioned other users, finding a mix of journalists, supporters, and opponents of Evo Morales.
 
 ```{r echo=TRUE}
 outdegree_mt <- sort(degree(mt,mode = "out"),decreasing = TRUE)
@@ -176,8 +171,7 @@ kable_material_dark(c("striped", "hover")) %>%
 scroll_box(width = "100%", height = "auto")
 ```
 
-
-Below are users who acted as a bridge between the other nodes within the network by measuring betweenness centrality.
+### Below are users who acted as a bridge between the other nodes within the network by measuring betweenness centrality.
 
 ```{r echo=TRUE}
 # BETWEENESS 
@@ -188,7 +182,7 @@ kable_material_dark(c("striped", "hover")) %>%
 scroll_box(width = "100%", height = "auto")
 ```
 
-Using Google's PageRank algorithm we can find the biggest influencers in this network through the ranks of search results.
+### Using Google's PageRank algorithm we can find the biggest influencers in this network through the ranks of search results.
 
 ```{r echo=TRUE}
 pr <- page_rank(mt, algo = c("prpack"))
@@ -199,7 +193,7 @@ kable_material_dark(c("striped", "hover")) %>%
 scroll_box(width = "100%", height = "auto")
 ```
 
-Total measures of popularity/status
+### Total measures of popularity/status
 
 ```{r echo=TRUE}
 # NODES
@@ -243,6 +237,12 @@ graph4
 
 # Inferential Statistics
 
-By conditioning the transitivity (clustering) of the network on size, density, and dyads. We find that in 1,000 random networks, only the variable size (number of nodes) is able to produce a greater value than our observation.
+By conditioning the transitivity (clustering) of the network on size, density, and dyads. We find that in 1,000 random networks, the variable number of nodes is able to produce a greater value than the observed graph's transitivity.
 
+![CUG Plot](images/cugplot1.png)
 
+This network graph has a low centralization score. Below it will be evaluated on indegree and outdegree vertices and conditioned on the variables size, density, and dyads. We find that in 1,000 random networks, none of the variables above were able to produce a value higher than the observed centralization score when based on indegree. However, the variable number of nodes was able to produce a greater value when evaluating for outdegrees.
+
+![](images/cugplot2.png)
+
+![](images/cugplot3.png)
