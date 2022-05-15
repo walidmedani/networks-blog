@@ -1,0 +1,78 @@
+---
+title: "Blog 2"
+description: |
+  Text As Data.
+author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-03-15
+output:
+  distill::distill_article:
+    self_contained: false
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Data Collection Woes
+
+Due to the recent Russian invasion of Ukraine and how Russia disguised
+its invasion through the lens of "denazification", I became interested
+in the topic. I recalled reading an article back in 2018 in Reuters
+(<https://www.reuters.com/article/us-cohen-ukraine-commentary/commentary-ukraines-neo-nazi-problem-idUSKBN1GV2TY>)
+that left me with an impression of it being a rampant problem within
+Ukraine. So I became interested in collecting all articles that mention
+the words Ukraine and Nazi within the same article from 2008-2021 to see
+if there has been a shift in coverage of Neo-nazis in the country over
+time.
+
+However, I'm having trouble scraping data from the New York Times API. I
+can't find any documentations online of how to do it within R but
+tutorials are readily available for other programming languages. Code
+below:
+
+    api <- "0yT3KZ0H2GdNmkHRL6h2OmCgNyEj3d7R"
+
+    nytime = function () { url = paste('http://api.nytimes.com/svc/search/v2/articlesearch.json?',searchQ, '20080101&begin_date=','20220422&end_date=','20220422&api-key=',api,sep="") #get the total number of search results initialsearch = fromJSON(url,flatten = T) maxPages = round((initialsearch$response$meta$hits / 10)-1)
+
+    #try with the max page limit at 10 maxPages = ifelse(maxPages >= 10, 10, maxPages)
+
+    #creat a empty data frame df = data.frame(id=as.numeric(),source=character(),type_of_material=character(), web_url=character())
+
+    #save search results into data frame for(i in 0:maxPages){ #get the search results of each page nytSearch = fromJSON(paste0(url, "&page=", i), flatten = T) temp = data.frame(id=1:nrow(nytSearch$response$docs), source = nytSearch$response$docs$source,  type_of_material = nytSearch$response$docs$type_of_material, web_url=nytSearch$response$docs$web_url) df=rbind(df,temp) Sys.sleep(5) #sleep for 5 second } return(df) }
+
+    UR <- nytime('ukraine',2020) write.csv(UR, "ur.csv")
+
+    library(nytimes) ## replace x's with nytimes article search API key which ## you can acquire by visiting the following URL: ## https://developer.nytimes.com/signup apikey <- paste0("NYTIMES_KEY=", "0yT3KZ0H2GdNmkHRL6h2OmCgNyEj3d7R")
+
+    make path to .Renviron
+
+    file <- file.path(path.expand("~"), ".Renviron")
+
+    save environment variable
+
+    cat(apikey, file = file, append = TRUE, fill = TRUE)
+
+    get http response objects for search about sanctions
+
+    nytsearch <- nyt_search("ukraine", n = 2000)
+
+    convert response object to data frame
+
+    nytsearchdf <- as.data.frame(nytsearch)
+
+    preview data
+
+    head(nytsearchdf, 10)
+
+    NYTIMES_KEY <- readLines("nytimes_api_key.txt")
+
+    term <- "ukraine" begin_date <- "20190101" end_date <- "20200422"
+
+    baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=",term, "&begin_date=",begin_date,"&end_date=",end_date, "&facet_filter=true&api-key=",NYTIMES_KEY, sep="")
+
+    initialQuery <- fromJSON(baseurl) maxPages <- round((initialQuery$response$meta$hits[1] / 10)-1)
+
+    pages_2014 <- vector("list",length=maxPages)
+
+    for(i in 0:maxPages){ nytSearch <- fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% data.frame() pages_2014[[i+1]] <- nytSearch Sys.sleep(6) #I was getting errors more often when I waited only 1 second between calls. 5 seconds seems to work better. }
