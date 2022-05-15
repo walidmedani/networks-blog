@@ -74,3 +74,8 @@ create_post("Blog 2")
 library(distill)
 create_post("Blog 3")
 ```
+
+```{r include=FALSE}
+library(distill)
+create_post("Blog 4")
+```

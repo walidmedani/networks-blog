@@ -1,0 +1,15 @@
+---
+title: "Blog 4"
+description: |
+  Text As Data.
+author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-04-01
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+

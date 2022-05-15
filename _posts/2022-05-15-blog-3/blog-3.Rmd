@@ -39,4 +39,4 @@ limit.
 
 Correct(?) code below:
 
-    tweets <- search_fullarchive( q = "(bolivia OR coup OR #boliviacoup OR #bolivia OR democracy OR oas) (evo OR anez OR evomorales OR jeanineanez OR Áñez) lang:en, -is:retweet", fromDate = "20191110000", toDate = "202001010000", n = 50000, env_name = "boliviadev", parse = TRUE, token = mytoken) tweets
+| tweets \<- search_fullarchive( q = "(bolivia OR coup OR #boliviacoup OR #bolivia OR democracy OR oas) (evo OR anez OR evomorales OR jeanineanez OR Áñez) lang:en, -is:retweet", fromDate = "20191110000", toDate = "202001010000", n = 50000, env_name = "boliviadev", parse = TRUE, token = mytoken) tweets

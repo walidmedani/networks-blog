@@ -51,6 +51,23 @@
     "input_file": {}
   },
   {
+    "path": "posts/2022-05-15-blog-3/",
+    "title": "Blog 3",
+    "description": "Text As Data.",
+    "author": [
+      {
+        "name": "Walid Medani",
+        "url": "https://walidmedani.github.io/networks-blog/"
+      }
+    ],
+    "date": "2022-03-20",
+    "categories": [],
+    "contents": "\r\nI ended up scraping the idea of using the NYT API for the Ukraine research question analyzing how coverage of Neo-Nazis in the country has changed throughout the years. I wasn’t really sure on how to analyze the research question in a meaningful way and had too many issues dealing with the API.\r\nInstead I will be conducting a sentiment analysis on the 2019 political crisis that happened in Bolivia, where the incumbent was ousted after an election audit by the Organization of American States.\r\nI used the package rtweet to collect tweets from November 2019 to October 2020. After finally getting approved for Academic access, I ended up going over the request limit. I thought there was only a max on the amount of tweets you can collect but came to find out there’s also a limit of request calls to the API. What sent me over the limit was my issue with retrieving tweets from two lists. I wanted the search query to include two of the keywords from this list: bolivia, coup, boliviacoup, democracy, oas, evo, anez, morales, jeanineanez, anez, evomorales. To get this code right, I was only collecting 10-100 tweets to see if it executed properly. Unfortunately by the time I think I got my search string correct, I was hit with the error that I’ve hit the limit.\r\nCorrect(?) code below:\r\ntweets <- search_fullarchive( q = “(bolivia OR coup OR #boliviacoup OR #bolivia OR democracy OR oas) (evo OR anez OR evomorales OR jeanineanez OR Áñez) lang:en, -is:retweet”, fromDate = “20191110000”, toDate = “202001010000”, n = 50000, env_name = “boliviadev”, parse = TRUE, token = mytoken) tweets\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2022-05-15T17:35:55-04:00",
+    "input_file": {}
+  },
+  {
     "path": "posts/2022-05-15-blog-2/",
     "title": "Blog 2",
     "description": "Text As Data.",
