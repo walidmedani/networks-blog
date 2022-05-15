@@ -1,7 +1,7 @@
 ---
 title: "Blog 3"
 description: |
-  A short description of the post.
+  Text As Data.
 author:
   - name: Walid Medani
     url: https://walidmedani.github.io/networks-blog/
