@@ -1,0 +1,152 @@
+---
+title: "Blog 5"
+description: |
+  Text As Data.
+author:
+  - name: Walid Medani
+    url: https://walidmedani.github.io/networks-blog/
+date: 2022-04-10
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+```{r}
+library(jsonlite)
+library(dplyr)
+library(sentimentr)
+library(tidyverse)
+library(readr)
+library(tm)
+library(syuzhet)
+library(tidytext)
+library(ggplot2)
+library(quanteda)
+```
+
+Loading in data
+
+```{r}
+tweets <- readRDS("~/networks-blog/boliviatweetsfile")
+tweets <- iconv(tweets$text, to = "ASCII", sub = " ")
+tweets <- gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", tweets)  # Remove the "RT" (retweet) and usernames 
+tweets = gsub("http.+ |http.+$", " ", tweets)  # Remove html links
+tweets = gsub("http[[:alnum:]]*", "", tweets)
+tweets = gsub("[[:punct:]]", " ", tweets)  # Remove punctuation
+tweets = gsub("[ |\t]{2,}", " ", tweets)  # Remove tabs
+tweets = gsub("^ ", "", tweets)  # Leading blanks
+tweets = gsub(" $", "", tweets)  # Lagging blanks
+tweets = gsub(" +", " ", tweets) # General spaces 
+```
+
+```{r}
+tweets = tolower(tweets)
+tweets = unique(tweets)
+corpus <- Corpus(VectorSource(tweets))
+corpus <- tm_map(corpus, removeWords, stopwords("english"))  
+corpus <- tm_map(corpus, removeNumbers)
+
+corpus <- tm_map(corpus, stemDocument)
+corpus = tm_map(corpus, removeWords, c("amp", "will", "get", "can", "like", "say", "know"))
+```
+
+
+# Sentiment Analysis
+
+```{r}
+# Sentiment Analysis
+testdata_text_sent<- get_nrc_sentiment((as.character(corpus)))
+
+#calculating total score for each sentiment
+testdata_text_sent_score<-data.frame(colSums(testdata_text_sent[,]))
+
+names(testdata_text_sent_score)<-"Score"
+testdata_text_sent_score<-cbind("sentiment"=rownames(testdata_text_sent_score),testdata_text_sent_score)
+rownames(testdata_text_sent_score)<-NULL
+
+
+#plotting the sentiments with scores
+ggplot(data=testdata_text_sent_score,aes(x=sentiment,y=Score))+geom_bar(aes(fill=sentiment),stat = "identity")+
+  theme(legend.position="none")+
+  xlab("Sentiments")+ylab("scores")+ggtitle("Sentiments of Twitter Users ")
+```
+
+
+
+```{r}
+library(quanteda)
+library(quanteda.sentiment)
+twtDfm_nrc <- dfm(tokens(as.character(corpus), remove_punct = TRUE),
+                              tolower = TRUE) %>%
+                          dfm_lookup(data_dictionary_NRC)
+df_nrc <- convert(twtDfm_nrc, to = "data.frame")
+df_nrc$polarity <- (df_nrc$positive - df_nrc$negative)/(df_nrc$positive + df_nrc$negative)
+df_nrc$polarity[which((df_nrc$positive + df_nrc$negative) == 0)] <- 0
+
+
+twtDfm_lsd2015 <- dfm(tokens(as.character(corpus), remove_punct = TRUE),
+                              tolower = TRUE) %>%
+                          dfm_lookup(data_dictionary_LSD2015)
+
+df_lsd2015 <- convert(twtDfm_lsd2015, to = "data.frame")
+df_lsd2015$polarity <- (df_lsd2015$positive - df_lsd2015$negative)/(df_lsd2015$positive + df_lsd2015$negative)
+df_lsd2015$polarity[which((df_lsd2015$positive + df_lsd2015$negative) == 0)] <- 0
+
+
+twtDfm_geninq <- dfm(tokens(as.character(corpus), remove_punct = TRUE),
+                             tolower = TRUE) %>%
+                    dfm_lookup(data_dictionary_geninqposneg)
+df_geninq <- convert(twtDfm_geninq, to = "data.frame")
+df_geninq$polarity <- (df_geninq$positive - df_geninq$negative)/(df_geninq$positive + df_geninq$negative)
+df_geninq$polarity[which((df_geninq$positive + df_geninq$negative) == 0)] <- 0
+```
+
+```{r}
+colnames(df_nrc) <- paste("nrc", colnames(df_nrc), sep = "_")
+colnames(df_lsd2015) <- paste("lsd2015", colnames(df_lsd2015), sep = "_")
+colnames(df_geninq) <- paste("geninq", colnames(df_geninq), sep = "_")
+
+# now let's compare our estimates
+sent_df <- merge(df_nrc, df_lsd2015, by.x = "nrc_doc_id", by.y = "lsd2015_doc_id")
+sent_df <- merge(sent_df, df_geninq, by.x = "nrc_doc_id", by.y = "geninq_doc_id")
+```
+
+```{r}
+cor(sent_df$nrc_polarity, sent_df$lsd2015_polarity)
+cor(sent_df$nrc_polarity, sent_df$geninq_polarity)
+cor(sent_df$lsd2015_polarity, sent_df$geninq_polarity)
+```
+
+```{r}
+library(wordcloud)
+library(reshape2)
+
+token = data.frame(text=tweets, stringsAsFactors = FALSE) %>% 
+      unnest_tokens(word, text)
+
+token %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("red", "blue"),
+                   max.words = 100)
+```
+
+
+```{r}
+bing_word_counts <- token %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
