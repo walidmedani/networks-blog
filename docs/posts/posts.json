@@ -17,6 +17,23 @@
     "input_file": {}
   },
   {
+    "path": "posts/2022-05-15-blog-6/",
+    "title": "Blog 6",
+    "description": "Text As Data.",
+    "author": [
+      {
+        "name": "Walid Medani",
+        "url": "https://walidmedani.github.io/networks-blog/"
+      }
+    ],
+    "date": "2022-04-25",
+    "categories": [],
+    "contents": "\r\n\r\n\r\nlibrary(jsonlite)\r\nlibrary(dplyr)\r\nlibrary(sentimentr)\r\nlibrary(tidyverse)\r\nlibrary(readr)\r\nlibrary(tm)\r\nlibrary(syuzhet)\r\nlibrary(tidytext)\r\nlibrary(ggplot2)\r\nlibrary(quanteda)\r\nlibrary(topicmodels)\r\nlibrary(\"quanteda.textplots\")\r\n\r\n\r\n\r\nTrying out topic modeling, I had to just insert images due to the git file going over the 100mb limit.\r\n\r\n\r\ntweets <- readRDS(\"~/networks-blog/boliviatweetsfile\")\r\ntweets <- iconv(tweets$text, to = \"ASCII\", sub = \" \")\r\ntweets <- gsub(\"(RT|via)((?:\\\\b\\\\W*@\\\\w+)+)\", \"\", tweets)  # Remove the \"RT\" (retweet) and usernames \r\ntweets = gsub(\"http.+ |http.+$\", \" \", tweets)  # Remove html links\r\ntweets = gsub(\"http[[:alnum:]]*\", \"\", tweets)\r\ntweets = gsub(\"[[:punct:]]\", \" \", tweets)  # Remove punctuation\r\ntweets = gsub(\"[ |\\t]{2,}\", \" \", tweets)  # Remove tabs\r\ntweets = gsub(\"^ \", \"\", tweets)  # Leading blanks\r\ntweets = gsub(\" $\", \"\", tweets)  # Lagging blanks\r\ntweets = gsub(\" +\", \" \", tweets) # General spaces \r\n\r\n\r\n\r\n\r\n\r\ntweets = tolower(tweets)\r\ntweets = unique(tweets)\r\ncorpus <- Corpus(VectorSource(tweets))\r\ncorpus <- tm_map(corpus, removeWords, stopwords(\"english\"))  \r\ncorpus <- tm_map(corpus, removeNumbers)\r\n\r\ncorpus <- tm_map(corpus, stemDocument)\r\ncorpus = tm_map(corpus, removeWords, c(\"amp\", \"will\", \"get\", \"can\", \"like\", \"say\", \"know\"))\r\n\r\n\r\n\r\n\r\n\r\ntwtdfmstop <- tokens(as.character(corpus), \r\n                 remove_punct = TRUE, \r\n                 remove_url = TRUE, \r\n                 remove_numbers = TRUE,\r\n                 remove_separators = TRUE,\r\n                 verbose = TRUE)\r\n\r\ntweetdfm <- dfm(tokens(twtdfmstop))\r\n\r\ntweetdfm <- tweetdfm %>%\r\n            dfm_remove(\"english\") %>% \r\n            dfm_remove(c(\"bolivia\", \"coup\"))\r\n\r\n\r\n\r\nCo-Occurence Matrix\r\ntwtdfmstop2 <- dfm_remove(tweetdfm, c(\"can\", \"get\", \"know\", \"#\", \"@\", \"now\", \"like\")) smaller_dfm <- dfm_trim(twtdfmstop2, min_termfreq = 100)\r\ncreate fcm from dfm\r\nsmaller_fcm <- fcm(smaller_dfm)\r\nmyFeatures <- names(topfeatures(smaller_fcm, 30))\r\nretain only those top features as part of our matrix\r\neven_smaller_fcm <- fcm_select(smaller_fcm, pattern = myFeatures, selection = \"keep\")\r\ncheck dimensions\r\ndim(even_smaller_fcm)\r\ncompute size weight for vertices in network\r\nsize <- log(colSums(even_smaller_fcm))\r\ncreate plot\r\nset.seed(100) textplot_network(even_smaller_fcm, vertex_size = size / max(size) * 3)\r\n\r\nTopic Modeling\r\nlda <- LDA(tweetdfm, k = 10)\r\nterm <- terms(lda, 10) term\r\n\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2022-05-15T22:22:30-04:00",
+    "input_file": "blog-6.knit.md"
+  },
+  {
     "path": "posts/2022-05-15-blog-5/",
     "title": "Blog 5",
     "description": "Text As Data.",
